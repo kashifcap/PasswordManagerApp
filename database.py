@@ -55,3 +55,34 @@ def write_tocreddb(db, password, user, username=None, email=None, phone=None, ur
     cursor = db.cursor()
     cursor.execute(query, (username, email, phone, url, password, user))
     db.commit()
+
+
+def read_tocreddb(db, user):
+    query = "SELECT id,username,email,phone,url,password FROM Credentials WHERE user=%s"
+    cursor = db.cursor()
+
+    cursor.execute(query, (user,))
+
+    results = []
+
+    for obj in cursor:
+        dicto = {}
+        dicto['id'] = obj[0]
+        dicto['username'] = obj[1]
+        dicto['email'] = obj[2]
+        dicto['phone'] = obj[3]
+        dicto['url'] = obj[4]
+        dicto['password'] = obj[5]
+
+        results.append(dicto)
+
+    return results
+
+
+def delete_tocreddb(db, id):
+    query = "DELETE FROM Credentials where id=%s"
+
+    cursor = db.cursor()
+    cursor.execute(query, (id,))
+
+    db.commit()

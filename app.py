@@ -1,5 +1,6 @@
 import tkinter as tk
-from database import connection, write_todb, read_todb, write_tocreddb
+from database import connection, write_todb, read_todb, write_tocreddb, read_tocreddb, delete_tocreddb
+from functools import partial
 
 
 class PasswordManager(tk.Frame):
@@ -131,23 +132,126 @@ class PasswordManager(tk.Frame):
             else:
                 self.login_page()
 
+    def edit_cred(self, id):
+        pass
+
+    def delete_cred(self, id):
+        delete_tocreddb(self.db, id)
+        print("Deleted {}".format(id))
+        self.user_window()
+
+    def generate_frame(self):
+        frames = []
+
+        results = read_tocreddb(self.db, self.current_user)
+
+        print(results)
+
+        for result in results:
+            id = result.get('id')
+            username = result.get('username')
+            email = result.get('email')
+            phone = result.get('phone')
+            url = result.get('url')
+            password = result.get('password')
+
+            if not username:
+                username = "N/A"
+            if not email:
+                email = "N/A"
+            if not phone:
+                phone = "N/A"
+            if not url:
+                url = "N/A"
+
+            frame = tk.Frame(self.scrollable_frame, bg='cyan')
+
+            username_label = tk.Label(frame, text="username", bg='cyan')
+            username_data_label = tk.Label(frame, text=username, bg='cyan')
+
+            email_label = tk.Label(frame, text="email", bg='cyan')
+            email_data_label = tk.Label(frame, text=email, bg='cyan')
+
+            phone_label = tk.Label(frame, text="phone", bg='cyan')
+            phone_data_label = tk.Label(frame, text=phone, bg='cyan')
+
+            url_label = tk.Label(frame, text="url", bg='cyan')
+            url_data_label = tk.Label(frame, text=url, bg='cyan')
+
+            password_label = tk.Label(frame, text="password", bg='cyan')
+            password_data_label = tk.Label(frame, text=password, bg='cyan')
+
+            edit_button = tk.Button(
+                frame, text="edit", command=lambda: self.edit_cred(id))
+            delete_button = tk.Button(
+                frame, text="delete", command=partial(self.delete_cred, id))
+
+            username_label.grid(row=0, column=0, padx=30)
+            username_data_label.grid(row=0, column=1, padx=20)
+
+            email_label.grid(row=1, column=0, padx=30)
+            email_data_label.grid(row=1, column=1, padx=20)
+
+            phone_label.grid(row=2, column=0, padx=30)
+            phone_data_label.grid(row=2, column=1, padx=20)
+
+            url_label.grid(row=3, column=0, padx=30)
+            url_data_label.grid(row=3, column=1, padx=20)
+
+            password_label.grid(row=4, column=0, padx=30)
+            password_data_label.grid(row=4, column=1, padx=20)
+
+            edit_button.grid(row=5, column=0, padx=30)
+            delete_button.grid(row=5, column=1, padx=20)
+
+            frames.append(frame)
+
+        return frames
+
     def user_window(self):
         self.main_frame.destroy()
 
         self.root.title(f"Password Manager - {self.current_user}")
         self.root.geometry("600x500+250+130")
 
-        self.notification_window = tk.Frame(
-            self.root, bg='blue', width=600, height=50)
-        self.notification_window.grid(row=0, column=0, pady=10)
+        self.control_window = tk.Frame(
+            self.root, bg='yellow', width=600, height=50)
+        self.control_window.grid_propagate(False)
+        self.control_window.grid(row=0, column=0, pady=10)
 
         self.add_button = tk.Button(
-            self.notification_window, text="Add", command=self.add_cred)
-        self.add_button.place(x=50, y=10)
+            self.control_window, text="Add", command=self.add_cred)
+        self.add_button.grid(row=0, column=0, padx=120,
+                             pady=10)  # place(x=50, y=10)
 
         self.logout_button = tk.Button(
-            self.notification_window, text="Logout", command=self.logout)
-        self.logout_button.place(x=450, y=10)
+            self.control_window, text="Logout", command=self.logout)
+        self.logout_button.grid(row=0, column=1, padx=120,
+                                pady=10)  # place(x=450, y=10)
+
+        self.container = tk.Frame(self.root, width=600, height=600, bg='red')
+        self.container.grid_propagate(False)
+        self.canvas = tk.Canvas(self.container)
+        self.scrollbar = tk.Scrollbar(
+            self.container, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tk.Frame(self.canvas)
+
+        self.scrollable_frame.bind('<Configure>', lambda e: self.canvas.configure(
+            scrollregion=self.canvas.bbox("all")))
+
+        self.canvas.create_window(
+            (0, 0), window=self.scrollable_frame, anchor='nw')
+
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        frames = self.generate_frame()
+
+        for i, frame in enumerate(frames):
+            frame.grid(row=i, padx=30, pady=10)
+
+        self.container.grid(row=1, columnspan=2, sticky='news')
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
 
     def logout(self):
         self.current_user = ""
@@ -157,10 +261,10 @@ class PasswordManager(tk.Frame):
         add_cred_window = tk.Toplevel(self.root)
         add_cred_window.config(bg='blue')
         add_cred_window.title("Add Credentials")
-        add_cred_window.geometry("500x400+300+100")
+        add_cred_window.geometry("500x450+300+100")
 
         add_cred_frame = tk.Frame(
-            add_cred_window, bg='blue', bd=0, width=500, height=400)
+            add_cred_window, bg='blue', bd=0, width=500, height=450)
         add_cred_frame.grid_propagate(False)
 
         add_cred_frame.grid(row=0, column=0)
@@ -203,10 +307,25 @@ class PasswordManager(tk.Frame):
             url = url_entrybox.get()
             password = password_entrybox.get()
 
-            write_tocreddb(db=self.db, password=password, user=self.current_user,
-                           username=username, email=email, phone=phone, url=url)
+            if username == "":
+                username = None
+            if email == "":
+                email = None
+            if phone == "":
+                phone = None
+            if url == "":
+                url = None
+            if password == "":
+                label = tk.Label(
+                    add_cred_frame, text="*Password field cannot be empty", fg='red', bg='white')
+                label.grid(row=6, columnspan=2, pady=5)
+            else:
+                write_tocreddb(db=self.db, password=password, user=self.current_user,
+                               username=username, email=email, phone=phone, url=url)
 
-            add_cred_window.destroy()
+                add_cred_window.destroy()
+
+                self.user_window()
 
         add_button = tk.Button(
             add_cred_frame, text="Add", command=add_cred_todb)
