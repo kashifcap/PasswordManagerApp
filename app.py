@@ -1,5 +1,5 @@
 import tkinter as tk
-from database import connection, write_todb, read_todb
+from database import connection, write_todb, read_todb, write_tocreddb
 
 
 class PasswordManager(tk.Frame):
@@ -197,6 +197,15 @@ class PasswordManager(tk.Frame):
         password_entrybox.grid(row=4, column=1, padx=20, pady=20)
 
         def add_cred_todb():
+            username = username_entrybox.get()
+            email = email_entrybox.get()
+            phone = phnno_entrybox.get()
+            url = url_entrybox.get()
+            password = password_entrybox.get()
+
+            write_tocreddb(db=self.db, password=password, user=self.current_user,
+                           username=username, email=email, phone=phone, url=url)
+
             add_cred_window.destroy()
 
         add_button = tk.Button(
