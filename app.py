@@ -1,5 +1,5 @@
 import tkinter as tk
-from database import connection, write_todb, read_todb, write_tocreddb, read_tocreddb, delete_tocreddb
+from database import connection, write_todb, read_todb, write_tocreddb, read_tocreddb, delete_tocreddb, update_tocreddb
 from functools import partial
 
 
@@ -132,8 +132,72 @@ class PasswordManager(tk.Frame):
             else:
                 self.login_page()
 
-    def edit_cred(self, id):
-        pass
+    def edit_cred(self, id, username, email, phone, url, password):
+        edit_cred_window = tk.Toplevel(self.root)
+        edit_cred_window.config(bg='blue')
+        edit_cred_window.title("Edit Credentials")
+        edit_cred_window.geometry("500x450+300+100")
+
+        edit_cred_frame = tk.Frame(
+            edit_cred_window, bg='blue', bd=0, width=500, height=450)
+        edit_cred_frame.grid_propagate(False)
+
+        edit_cred_frame.grid(row=0, column=0)
+
+        # Credentials details
+        username_label = tk.Label(edit_cred_frame, text="Username")
+        username_entrybox = tk.Entry(edit_cred_frame, width=40)
+
+        email_label = tk.Label(edit_cred_frame, text="Email")
+        email_entrybox = tk.Entry(edit_cred_frame, width=40)
+
+        phnno_label = tk.Label(edit_cred_frame, text="Phn no.")
+        phnno_entrybox = tk.Entry(edit_cred_frame, width=40)
+
+        url_label = tk.Label(edit_cred_frame, text="Url")
+        url_entrybox = tk.Entry(edit_cred_frame, width=40)
+
+        password_label = tk.Label(edit_cred_frame, text="Password")
+        password_entrybox = tk.Entry(edit_cred_frame, width=40)
+
+        username_entrybox.insert(0, username)
+        email_entrybox.insert(0, email)
+        phnno_entrybox.insert(0, phone)
+        url_entrybox.insert(0, url)
+        password_entrybox.insert(0, password)
+
+        username_label.grid(row=0, column=0, padx=20, pady=20)
+        username_entrybox.grid(row=0, column=1, padx=20, pady=20)
+
+        email_label.grid(row=1, column=0, padx=20, pady=20)
+        email_entrybox.grid(row=1, column=1, padx=20, pady=20)
+
+        phnno_label.grid(row=2, column=0, padx=20, pady=20)
+        phnno_entrybox.grid(row=2, column=1, padx=20, pady=20)
+
+        url_label.grid(row=3, column=0, padx=20, pady=20)
+        url_entrybox.grid(row=3, column=1, padx=20, pady=20)
+
+        password_label.grid(row=4, column=0, padx=20, pady=20)
+        password_entrybox.grid(row=4, column=1, padx=20, pady=20)
+
+        def edit_cred_todb():
+            new_username = username_entrybox.get()
+            new_email = email_entrybox.get()
+            new_phone = phnno_entrybox.get()
+            new_url = url_entrybox.get()
+            new_password = password_entrybox.get()
+
+            update_tocreddb(self.db, id=id, username=new_username,
+                            email=new_email, phone=new_phone, url=new_url, password=new_password)
+
+            edit_cred_window.destroy()
+
+            self.user_window()
+
+        edit_button = tk.Button(
+            edit_cred_frame, text="Update", command=edit_cred_todb)
+        edit_button.grid(row=5, columnspan=2, padx=20, pady=20)
 
     def delete_cred(self, id):
         delete_tocreddb(self.db, id)
@@ -182,7 +246,7 @@ class PasswordManager(tk.Frame):
             password_data_label = tk.Label(frame, text=password, bg='cyan')
 
             edit_button = tk.Button(
-                frame, text="edit", command=lambda: self.edit_cred(id))
+                frame, text="edit", command=partial(self.edit_cred, id, username, email, phone, url, password))
             delete_button = tk.Button(
                 frame, text="delete", command=partial(self.delete_cred, id))
 

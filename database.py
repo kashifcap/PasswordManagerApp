@@ -86,3 +86,12 @@ def delete_tocreddb(db, id):
     cursor.execute(query, (id,))
 
     db.commit()
+
+
+def update_tocreddb(db, id, username, email, phone, url, password):
+    query = "UPDATE Credentials SET username=%s,email=%s,phone=%s,url=%s,password=%s WHERE id=%s"
+
+    cursor = db.cursor()
+    cursor.execute(query, (username, email, phone, url, password, id))
+
+    db.commit()
