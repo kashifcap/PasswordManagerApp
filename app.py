@@ -15,6 +15,7 @@ class PasswordManager(tk.Frame):
         self.main_frame.pack(fill='both')
 
         self.current_user = ""
+        self.current_user_password = ""
 
         self.login_page()
 
@@ -201,15 +202,13 @@ class PasswordManager(tk.Frame):
 
     def delete_cred(self, id):
         delete_tocreddb(self.db, id)
-        print("Deleted {}".format(id))
         self.user_window()
 
     def generate_frame(self):
         frames = []
 
-        results = read_tocreddb(self.db, self.current_user)
-
-        print(results)
+        results = read_tocreddb(
+            db=self.db, user=self.current_user)
 
         for result in results:
             id = result.get('id')
@@ -230,20 +229,20 @@ class PasswordManager(tk.Frame):
 
             frame = tk.Frame(self.scrollable_frame, bg='cyan')
 
-            username_label = tk.Label(frame, text="username", bg='cyan')
-            username_data_label = tk.Label(frame, text=username, bg='cyan')
+            username_label = tk.Label(frame, text="username")
+            username_data_label = tk.Label(frame, text=username)
 
-            email_label = tk.Label(frame, text="email", bg='cyan')
-            email_data_label = tk.Label(frame, text=email, bg='cyan')
+            email_label = tk.Label(frame, text="email")
+            email_data_label = tk.Label(frame, text=email)
 
-            phone_label = tk.Label(frame, text="phone", bg='cyan')
-            phone_data_label = tk.Label(frame, text=phone, bg='cyan')
+            phone_label = tk.Label(frame, text="phone")
+            phone_data_label = tk.Label(frame, text=phone)
 
-            url_label = tk.Label(frame, text="url", bg='cyan')
-            url_data_label = tk.Label(frame, text=url, bg='cyan')
+            url_label = tk.Label(frame, text="url")
+            url_data_label = tk.Label(frame, text=url)
 
-            password_label = tk.Label(frame, text="password", bg='cyan')
-            password_data_label = tk.Label(frame, text=password, bg='cyan')
+            password_label = tk.Label(frame, text="password")
+            password_data_label = tk.Label(frame, text=password)
 
             edit_button = tk.Button(
                 frame, text="edit", command=partial(self.edit_cred, id, username, email, phone, url, password))
@@ -279,7 +278,7 @@ class PasswordManager(tk.Frame):
         self.root.geometry("600x500+250+130")
 
         self.control_window = tk.Frame(
-            self.root, bg='yellow', width=600, height=50)
+            self.root, bg='blue', width=600, height=50)
         self.control_window.grid_propagate(False)
         self.control_window.grid(row=0, column=0, pady=10)
 

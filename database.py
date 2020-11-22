@@ -1,8 +1,13 @@
 import mysql.connector
 import os
+import bcrypt
+from cryptography.fernet import Fernet
 
+
+key = os.environ.get("ENCRYPTKEY")
 
 # db = None
+
 
 def connection():
     return mysql.connector.connect(
@@ -27,7 +32,9 @@ def write_todb(db, user, password, email):
     if taken:
         return "401"
     else:
-        cursor.execute(query, (user, password, email))
+        hashed_password = bcrypt.hashpw(
+            password.encode("UTF-8"), bcrypt.gensalt())
+        cursor.execute(query, (user, hashed_password.decode("UTF-8"), email))
         db.commit()
         return "200"
 
@@ -44,7 +51,7 @@ def read_todb(db, user, password):
     if not user_password:
         return "404"
     else:
-        if user_password == password:
+        if bcrypt.checkpw(password.encode("UTF-8"), user_password.encode("UTF-8")):
             return "200"
         else:
             return "401"
@@ -52,13 +59,18 @@ def read_todb(db, user, password):
 
 def write_tocreddb(db, password, user, username=None, email=None, phone=None, url=None):
     query = "INSERT INTO Credentials(username,email,phone,url,password,user) VALUES(%s,%s,%s,%s,%s,%s)"
+    cipher = Fernet(key.encode("UTF-8"))
     cursor = db.cursor()
-    cursor.execute(query, (username, email, phone, url, password, user))
+    cursor.execute(query, (username, email, phone, url,
+                           cipher.encrypt(password.encode("UTF-8")), user))
     db.commit()
 
 
 def read_tocreddb(db, user):
     query = "SELECT id,username,email,phone,url,password FROM Credentials WHERE user=%s"
+
+    cipher = Fernet(key.encode("UTF-8"))
+
     cursor = db.cursor()
 
     cursor.execute(query, (user,))
@@ -72,7 +84,7 @@ def read_tocreddb(db, user):
         dicto['email'] = obj[2]
         dicto['phone'] = obj[3]
         dicto['url'] = obj[4]
-        dicto['password'] = obj[5]
+        dicto['password'] = cipher.decrypt(obj[5].encode("UTF-8"))
 
         results.append(dicto)
 
@@ -90,8 +102,9 @@ def delete_tocreddb(db, id):
 
 def update_tocreddb(db, id, username, email, phone, url, password):
     query = "UPDATE Credentials SET username=%s,email=%s,phone=%s,url=%s,password=%s WHERE id=%s"
-
+    cipher = Fernet(key.encode("UTF-8"))
     cursor = db.cursor()
-    cursor.execute(query, (username, email, phone, url, password, id))
+    cursor.execute(query, (username, email, phone, url,
+                           cipher.encrypt(password.encode("UTF-8")), id))
 
     db.commit()
